@@ -1,0 +1,49 @@
+name: Deploy Social Network
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. Setup Backend (.NET 8)
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish Backend
+        run: |
+          cd social-network-project/backend/SocialNetwork.API
+          dotnet publish -c Release -o ./publish
+
+      # 2. Setup Frontend (React)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Frontend
+        run: |
+          cd social-network-project/frontend
+          npm install
+          npm run build
+
+      # 3. Deploy to Azure (Replace 'app-name' with your actual Azure names)
+      - name: Deploy Backend to Azure
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'Your-Azure-Backend-Name'
+          publish-profile: ${{ secrets.AZURE_BACKEND_PUBLISH_PROFILE }}
+          package: './social-network-project/backend/SocialNetwork.API/publish'
+
+      - name: Deploy Frontend to Azure
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'Your-Azure-Frontend-Name'
+          publish-profile: ${{ secrets.AZURE_FRONTEND_PUBLISH_PROFILE }}
+          package: './social-network-project/frontend/dist'
